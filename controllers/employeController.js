@@ -7,13 +7,16 @@ const imagekit = require("../utils/imagekit").initImagekit();
 const path = require("path");
 const { sendtoken } = require("../utils/SendToken");
 const Internship = require("../models/InternshipModel");
-const Job = require("../models/jobModel"); 
+const Job = require("../models/jobModel");
 exports.homepage = catchAsyncErrors(async (req, res, next) => {
   res.json({ mesaage: "secure Employe homepage !" });
 });
 
 exports.currentEmploye = catchAsyncErrors(async (req, res, next) => {
-  const employe = await Employe.findById(req.id).exec();
+  const employe = await Employe.findById(req.id)
+    .populate("jobs")
+    .populate("internships")
+    .exec();
   console.log(employe);
   res.json(employe);
 });
@@ -54,25 +57,23 @@ exports.employesendmail = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("user not found with this email address", 404)
     );
 
-  const url = `${req.protocol}://${req.get("host")}/employe/forget-link/${
-    employe._id
-  }`;
+  const url = Math.floor(Math.random() * 9000 + 1000);
 
   sendmail(req, res, next, url);
-  employe.resetPasswordToken = "1";
+  employe.resetPasswordToken = url;
   await employe.save();
   res.status(200).json({ employe, url });
 });
 
 exports.employeforgetlink = catchAsyncErrors(async (req, res, next) => {
-  const employe = await Employe.findById(req.params.id).exec();
+  const employe = await Employe.findOne({ email: req.body.email }).exec();
   console.log(employe);
   if (!employe)
     return next(
       new ErrorHandler("user not found with this email address", 404)
     );
 
-  if (employe.resetPasswordToken == "1") {
+  if (employe.resetPasswordToken == req.body.otp) {
     employe.resetPasswordToken = "0";
     employe.password = req.body.password;
   } else {
@@ -128,20 +129,47 @@ exports.employeavatar = catchAsyncErrors(async (req, res, next) => {
 exports.createinternship = catchAsyncErrors(async (req, res, next) => {
   const employe = await Employe.findById(req.id).exec();
   const internship = await Internship(req.body);
+  
   internship.employe = employe._id;
-  employe.jobs.push(internship._id);
+  employe.internships.push(internship._id);
   await internship.save();
   await employe.save();
-  console.log(employe);
-  res.status(200).json({ success: true, internship });
+  console.log(employe,internship);
+  res.status(200).json({internship });
 });
 
 exports.readinternship = catchAsyncErrors(async (req, res, next) => {
-  const { jobs } = await Employe.findById(req.id)
-    .populate("jobs")
+  const { internships } = await Employe.findById(req.id)
+    .populate("internships")
     .exec();
-  res.status(200).json({ success: true, jobs });
+  res.status(200).json({ internships });
 });
+
+exports.updateinternship = catchAsyncErrors(async (req, res, next) => {
+  const  internships  = await Internship.findOneAndUpdate({
+    _id:req.params.id
+  },{
+    profile:req.body.profile,
+    skills:req.body.skills,
+    internshiptype: req.body.internshiptype,
+    openings:req.body.openings,
+    from: req.body.from,
+    to: req.body.to,
+    resposibility: String,
+    stipend: {
+      status:req.body.status,
+      amount:req.body.amount,
+    },
+
+    perks:req.body.perks,
+    assesments:req.body.assesments,
+
+    duration:req.body.duration,
+  },{new:true});
+
+  res.status(200).json({ internships });
+});
+
 
 exports.readsingleinternship = catchAsyncErrors(async (req, res, next) => {
   const internship = await Internship.findById(req.params.id).exec();
@@ -158,15 +186,44 @@ exports.createjob = catchAsyncErrors(async (req, res, next) => {
   await job.save();
   await employe.save();
   console.log(employe);
-  res.status(200).json({ success: true, job });
+  res.status(200).json({  job });
 });
 
-exports.readjob  = catchAsyncErrors(async (req, res, next) => {
+exports.readjob = catchAsyncErrors(async (req, res, next) => {
   const { jobs } = await Employe.findById(req.id).populate("jobs").exec();
-  res.status(200).json({ success: true, jobs });
+  res.status(200).json({ jobs });
 });
 
-exports.readsinglejob  = catchAsyncErrors(async (req, res, next) => {
+exports.readsinglejob = catchAsyncErrors(async (req, res, next) => {
   const job = await Job.findById(req.params.id).exec();
   res.status(200).json({ success: true, job });
 });
+
+
+exports.deletejob = catchAsyncErrors(async (req, res, next) => {
+  const job = await Job.findOneAndDelete({_id:req.params.id}).exec();
+  res.status(200).json({ success: true, message:"job deleted" });
+});
+
+
+exports.updatejob = catchAsyncErrors(async (req, res, next) => {
+  const job = await Job.findOneAndUpdate({_id:req.params.id},{
+    tittle:req.body.tittle,
+    skills:req.body.skills,
+    jobtype:req.body.jobtype, 
+    openings:req.body.openings,
+    description:req.body.description,
+    prefrences:req.body.prefrences,
+    salary:req.body.salary, 
+    perks:req.body.perks,
+    assesments:req.body.assesments,
+    responsibility:req.body.responsibility,
+  },{new:true}).exec();
+  res.status(200).json({ success: true, message:"job updated" });
+});
+
+exports.deleteidinternship = catchAsyncErrors(async (req, res, next) => {
+  const job = await Internship.findOneAndDelete({_id:req.params.id}).exec();
+  res.status(200).json({ success: true, message:"internship deleted" });
+});
+

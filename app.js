@@ -2,6 +2,8 @@ require("dotenv").config({ path: "./.env" });
 const express = require("express");
 const app = express();
 
+app.use(require("cors")({ origin: true, credentials: true }));
+
 // db connection
 require("./models/database").connectDatabase();
 
@@ -27,7 +29,7 @@ const fileupload = require("express-fileupload");
 app.use(fileupload());
 
 // routes
-app.use("/user",require("./routes/indexRoutes"));
+app.use("/",require("./routes/indexRoutes"));
 app.use("/resume",require("./routes/resumeRoutes"));
 app.use("/employe",require("./routes/employeRoutes"));
 

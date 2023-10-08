@@ -20,7 +20,7 @@ exports.sendmail = (req,res,next,url)=>{
         subject:"Password Reset Link",
         "text":"do not share this link",
         html:`<h1>click link blow to reset password</h1>
-        <a href="${url}">Reset password link</a>`,
+        <a href="${url}">your otp is ${url}</a>`,
 
     }
 

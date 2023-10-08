@@ -4,7 +4,7 @@ const Student = require("../models/studentModel");
 const ErrorHandler = require("../utils/ErrorHandler");
 const { sendmail } = require("../utils/Nodemailer");
 const { sendtoken } = require("../utils/SendToken");
-const imagekit = require('../utils/imagekit').initImagekit();
+const imagekit = require("../utils/imagekit").initImagekit();
 const path = require("path");
 const Internship = require("../models/InternshipModel");
 const Job = require("../models/jobModel");
@@ -14,18 +14,23 @@ exports.homepage = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.currentUser = catchAsyncErrors(async (req, res, next) => {
-  const student = await Student.findById(req.id).exec();
-  console.log(student);
-  res.json(student);
+  const student = await Student.findById(req.id)
+    .populate("jobs")
+    .populate("internships")
+    .exec();
+
+  res.json({ student });
 });
 
 exports.studentsignup = catchAsyncErrors(async (req, res, next) => {
   const student = await new Student(req.body).save();
   sendtoken(student, 200, res);
-  console.log(student)
+  console.log(student);
+  res.json({ student });
 });
 
 exports.studentsignin = catchAsyncErrors(async (req, res, next) => {
+  console.log(req.body);
   const student = await Student.findOne({ email: req.body.email })
     .select("+password")
     .exec();
@@ -54,95 +59,104 @@ exports.studentsendmail = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("user not found with this email address", 404)
     );
 
-  const url = `${req.protocol}://${req.get("host")}/student/forget-link/${
-    student._id
-  }`;
-
+  const url = Math.floor(Math.random() * 9000 + 1000);
   sendmail(req, res, next, url);
-  student.resetPasswordToken = "1";
+  student.resetPasswordToken = `${url}`;
   await student.save();
   res.status(200).json({ student, url });
 });
 
 exports.studentforgetlink = catchAsyncErrors(async (req, res, next) => {
-  const student = await Student.findById(req.params.id).exec();
+  const student = await Student.findOne({ email: req.body.email }).exec();
   console.log(student);
   if (!student)
     return next(
       new ErrorHandler("user not found with this email address", 404)
     );
 
-    if(student.resetPasswordToken == "1"){
-     student.resetPasswordToken = "0";
-         student.password = req.body.password;
-     }else{
-          new ErrorHandler("ivalid Link ! please tyr again",500);
-     }
+  if (student.resetPasswordToken == req.body.otp) {
+    student.resetPasswordToken = "0";
+    student.password = req.body.password;
+    await student.save();
+  } else {
+    new ErrorHandler("ivalid Link ! please tyr again", 500);
+  }
 
-     await student.save();
-     res.status(200).json({ message: "password successfull changed" });
+  res.status(200).json({ message: "password successfull changed" });
 });
 
+exports.studentresetpassword = catchAsyncErrors(async (req, res, next) => {
+  const student = await Student.findById(req.id);
+  student.resetPasswordToken = "0";
+  student.password = req.body.password;
+  await student.save();
+  sendtoken(student, 200, res);
+  res.status(200).json({ message: "password successfull reset" });
+});
 
-exports.studentresetpassword = catchAsyncErrors(async (req,res,next) =>{
-        const student = await Student.findById(req.id)
-        student.resetPasswordToken = "0";
-        student.password = req.body.password;
-        await student.save();
-        sendtoken(student, 200, res);
-        res.status(200).json({ message: "password successfull reset" });
-})
+exports.studentupdate = catchAsyncErrors(async (req, res, next) => {
+  const student = await Student.findByIdAndUpdate(
+    req.params.id,
+    req.body
+  ).exec();
+  res.status(200).json({ success: true, message: "updated student!", student });
+});
 
-exports.studentupdate = catchAsyncErrors(async(req,res,next)=>{
-     const student = await Student.findByIdAndUpdate(req.params.id,req.body).exec();
-     res.status(200).json({success:true,message:"updated student!",student})
-    
-})
-
-
-exports.studentavatar = catchAsyncErrors(async(req,res,next)=>{
-
+exports.studentavatar = catchAsyncErrors(async (req, res, next) => {
   const student = await Student.findById(req.params.id);
   const file = req.files.avatar;
-  const modifiedfileName = `resumebuilder-${Date.now()}${path.extname(file.name)}`
-  const {fileId,url} = await imagekit.upload({
-    file:file.data,
-    fileName:modifiedfileName
-  })
+  const modifiedfileName = `resumebuilder-${Date.now()}${path.extname(
+    file.name
+  )}`;
+  const { fileId, url } = await imagekit.upload({
+    file: file.data,
+    fileName: modifiedfileName,
+  });
 
-  if(student.avatar.fileId !== ""){
+  if (student.avatar.fileId !== "") {
     await imagekit.deleteFile(student.avatar.fileId);
   }
 
-  student.avatar = {fileId,url};
+  student.avatar = { fileId, url };
   await student.save();
 
-  res.status(200).json({success:true,message:"file uploaded successfully"});
-})
-
+  res
+    .status(200)
+    .json({ success: true, message: "file uploaded successfully" });
+});
 
 //_________apply Internship___________________
 
-exports.applyinternship = catchAsyncErrors(async(req,res,next)=>{
-
+exports.applyinternship = catchAsyncErrors(async (req, res, next) => {
   const student = await Student.findById(req.id).exec();
   const internship = await Internship.findById(req.params.internshipid).exec();
-   student.internships.push(internship._id);
-   internship.students.push(student._id);
-   await student.save(); 
-   await internship.save();
-   
- console.log(student,internship)
-})
+  student.internships.push(internship._id);
+  internship.students.push(student._id);
+  await student.save();
+  await internship.save();
+
+  console.log(student, internship);
+});
 
 //_________apply job___________________
 
-exports.applyjob = catchAsyncErrors(async(req,res,next)=>{
-  const student =await Student.findById(req.id).exec();
-  const job =await Job.findById(req.params.jobid).exec();
+exports.applyjob = catchAsyncErrors(async (req, res, next) => {
+  const student = await Student.findById(req.id).exec();
+  const job = await Job.findById(req.params.jobid).exec();
   student.jobs.push(job._id);
   job.students.push(student._id);
-  await student.save(); 
+  await student.save();
   await job.save();
-  res.json({student,job})
-})
+  res.json({ student, job });
+});
+
+exports.readalljobs = catchAsyncErrors(async (req, res, next) => {
+  const jobs = await Job.find().exec();
+  res.status(200).json({ jobs });
+});
+
+exports.readallinternships = catchAsyncErrors(async (req, res, next) => {
+  const internships = await Internship.find().exec();
+  console.log(internships);
+  res.status(200).json({ internships });
+});

@@ -12,12 +12,14 @@ const {
   studentupdate,
   studentavatar,
   applyinternship,
-  applyjob
+  applyjob,
+  readalljobs,
+  readallinternships,
 } = require("../controllers/indexController.js");
 const { isAuthenticated } = require("../middlewares/auth.js");
 
 // GET
-router.get("/", isAuthenticated, homepage);
+router.get("/", homepage);
 
 // GET current user
 router.post("/student", isAuthenticated, currentUser);
@@ -29,22 +31,28 @@ router.post("/student/signup", studentsignup);
 router.post("/student/signin", studentsignin);
 
 // GET /student/signout
-router.get("/student/signout", studentsignout);
+router.get("/student/signout",isAuthenticated ,studentsignout);
 
 // POST /student/send-mail
 router.post("/student/send-mail", studentsendmail);
 
 // GET student/forget-link/:id
-router.get("/student/forget-link/:id", studentforgetlink);
+router.post("/student/forget-link", studentforgetlink);
 
 // POST student/reset-password/:id
-router.post("/student/reset-password", isAuthenticated, studentresetpassword);
+router.post("/student/reset-password/:id", isAuthenticated, studentresetpassword);
 
 // POST student/update/:id-student
 router.post("/student/update/:id", isAuthenticated, studentupdate);
 
 // POST student/avtar/:id-student
 router.post("/student/avatar/:id", isAuthenticated, studentavatar);
+
+
+router.post("/student/alljobs",isAuthenticated,readalljobs)
+
+
+router.post("/student/allinternships",isAuthenticated,readallinternships)
 
 //___________apply internship __________
 

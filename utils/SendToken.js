@@ -9,7 +9,7 @@ exports.sendtoken = (student,statuscode,res)=>{
         // secure:true 
     }
 
-
+      
     res.status(statuscode).cookie("token", token , options).json({success:true, id:student._id , token})
    
 

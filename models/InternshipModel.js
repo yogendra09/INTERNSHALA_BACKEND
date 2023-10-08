@@ -29,7 +29,7 @@ const internshipModel = new mongoose.Schema(
     stipend: {
       status: {
         type: String,
-        enum: ["Fixed", "Negotiable", "Performance based", "Unpaid"],
+        enum: ["fixed", "negotiable", "performance based", "unpaid"],
       },
       amount: Number,
     },

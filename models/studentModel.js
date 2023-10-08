@@ -95,6 +95,7 @@ studentModel.pre("save", function () {
 });
 
 studentModel.methods.comparepassword = function (password) {
+  // return bcrypt.compareSync(password, this.password);
   return bcrypt.compareSync(password, this.password);
 };
 
