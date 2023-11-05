@@ -6,7 +6,7 @@ exports.sendtoken = (student,statuscode,res)=>{
         exipres:new Date(Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
         httpOnly:true,
         // jab https par chalyege tab kar denge secure true
-        // secure:true 
+        secure:true 
     }
 
       

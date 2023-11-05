@@ -8,6 +8,7 @@ const imagekit = require("../utils/imagekit").initImagekit();
 const path = require("path");
 const Internship = require("../models/InternshipModel");
 const Job = require("../models/jobModel");
+const job = require("../models/jobModel");
 
 exports.homepage = catchAsyncErrors(async (req, res, next) => {
   res.json({ mesaage: "secure homepage !" });
@@ -160,3 +161,10 @@ exports.readallinternships = catchAsyncErrors(async (req, res, next) => {
   console.log(internships);
   res.status(200).json({ internships });
 });
+
+exports.findspecificjobs = catchAsyncErrors(async(req,res,next)=>{
+  const specificjobs = await job.find({tittle:"sde"});
+  console.log(specificjobs);
+  res.json({specificjobs})
+   
+})

@@ -15,6 +15,7 @@ const {
   applyjob,
   readalljobs,
   readallinternships,
+  findspecificjobs,
 } = require("../controllers/indexController.js");
 const { isAuthenticated } = require("../middlewares/auth.js");
 
@@ -63,6 +64,10 @@ router.post("/student/apply/internship/:internshipid", isAuthenticated, applyint
 
 // POST /apply/:jobid
 router.post("/student/apply/job/:jobid", isAuthenticated, applyjob);
+
+// specific jobs
+router.get("/specificjobs",findspecificjobs);
+
 
 
 module.exports = router;
