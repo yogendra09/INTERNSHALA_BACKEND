@@ -61,7 +61,16 @@ exports.studentsendmail = catchAsyncErrors(async (req, res, next) => {
     );
 
   const url = Math.floor(Math.random() * 9000 + 1000);
-  sendmail(req, res, next, url);
+  const mailOptions = {
+    from:"Master Pvt. Ltd <hi.yogesh09@gmail.com>",
+    to: req.body.email,
+    subject:"Password Reset Link",
+    "text":"do not share this link",
+    html:`<h1>click link blow to reset password</h1>
+    <a href="${url}">your otp is ${url}</a>`,
+
+}
+  sendmail(req, res, next, url ,mailOptions);
   student.resetPasswordToken = `${url}`;
   await student.save();
   res.status(200).json({ student, url });
@@ -135,8 +144,18 @@ exports.applyinternship = catchAsyncErrors(async (req, res, next) => {
   internship.students.push(student._id);
   await student.save();
   await internship.save();
+  console.log(req.params.internshipid)
+  const mailOptions = {
+    from:"Master Pvt. Ltd <hi.yogesh09@gmail.com>",
+    to: student.email,
+    subject:"you successfully applied for this internship",
+    "text":"BEST OF LUCK",
+    html:`<h1>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quia, optio</h1>`,
 
-  console.log(student, internship);
+}
+  sendmail( res, next ,mailOptions);
+
+  // console.log(student, internship);
 });
 
 //_________apply job___________________
@@ -148,6 +167,15 @@ exports.applyjob = catchAsyncErrors(async (req, res, next) => {
   job.students.push(student._id);
   await student.save();
   await job.save();
+  const mailOptions = {
+    from:"Master Pvt. Ltd <hi.yogesh09@gmail.com>",
+    to: student.email,
+    subject:"you successfully applied for this job role",
+    "text":"BEST OF LUCK",
+    html:`<h1>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quia, optio</h1>`,
+
+}
+  sendmail( res, next ,mailOptions);
   res.json({ student, job });
 });
 

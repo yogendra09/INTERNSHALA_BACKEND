@@ -20,7 +20,8 @@ const {
   deletejob,
   deleteidinternship,
   updateinternship,
-  updatejob
+  updatejob,
+  studentapplied
 } = require("../controllers/employeController");
 const { isAuthenticated } = require("../middlewares/auth.js");
 
@@ -85,5 +86,7 @@ router.post("/job/read", isAuthenticated, readjob);
 
 //POST employe/job/read/:id
 router.post("/job/read/:id", isAuthenticated, readsinglejob);
+
+router.post("/student/applied/internship", isAuthenticated, studentapplied);
 
 module.exports = router;

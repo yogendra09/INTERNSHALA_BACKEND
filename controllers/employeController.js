@@ -227,3 +227,35 @@ exports.deleteidinternship = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({ success: true, message:"internship deleted" });
 });
 
+
+exports.studentapplied = catchAsyncErrors(async (req, res, next) => {
+   const employe = await Employe.findOne({_id:req.id}).populate({
+    path:"internships",
+    populate:{
+      path:"students"
+    }
+   }).populate({
+    path:"jobs",
+    populate:{
+    path:"students"
+    }
+
+   }).exec();
+   
+   const internship = employe.internships.map((s)=>{
+     return s;
+    })
+    
+         const applied =   internship.map((s)=>{
+            return s;
+           })
+
+           const [students] = applied
+
+          //  const students = applied.students.map((stu)=>{
+          //   return stu
+          //  })
+           console.log(students)
+
+       res.json({response:students.students})
+});
