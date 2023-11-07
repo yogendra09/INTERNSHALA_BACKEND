@@ -1,6 +1,8 @@
 require("dotenv").config({ path: "./.env" });
 const express = require("express");
 const app = express();
+const cookieParser = require('cookie-parser');
+const mongoStore = require('connect-mongo');
 
 app.use(require("cors")({ origin: true, credentials: true }));
 
@@ -20,7 +22,11 @@ const cookieparser = require("cookie-parser");
 app.use(session({
   resave:true,
   saveUninitialized:true,
-  secret:process.env.EXPRESS_SESSION_SECRET
+  secret:process.env.EXPRESS_SESSION_SECRET,
+   store:mongoStore.create({
+    mongoUrl:process.env.MONGODB_URL,
+    autoRemove:'disabled'
+  })
 })) 
 app.use(cookieparser())
 
